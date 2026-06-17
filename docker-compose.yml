@@ -1,0 +1,59 @@
+# docker-compose.yml — local dev only
+# Production uses Kamal; this compose file is never deployed as-is
+services:
+  wordpress:
+    build:
+      context: .
+      target: runtime      # dev builds stop at the composer stage — faster iteration
+    volumes:
+      - .:/var/www/html
+      - /var/www/html/vendor
+    ports:
+      - "8080:80"
+    environment:
+      WP_ENV: development
+      WP_HOME: http://localhost:8080
+      WP_SITEURL: http://localhost:8080/wp
+      DB_HOST: db
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      AUTH_KEY: dev-key
+      SECURE_AUTH_KEY: dev-key
+      LOGGED_IN_KEY: dev-key
+      NONCE_KEY: dev-key
+      AUTH_SALT: dev-salt
+      SECURE_AUTH_SALT: dev-salt
+      LOGGED_IN_SALT: dev-salt
+      NONCE_SALT: dev-salt
+    depends_on:
+      db:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "/entrypoint.sh"]
+
+
+  db:
+    image: mariadb:11
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mariadb-admin ping -h localhost -u $$MYSQL_USER -p$$MYSQL_PASSWORD"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Adminer for quick DB inspection in dev — never in prod
+  adminer:
+    image: adminer:latest
+    ports:
+      - "8081:8080"
+    depends_on:
+      - db
+
+volumes:
+  db_data:
