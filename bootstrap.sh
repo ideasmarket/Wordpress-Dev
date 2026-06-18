@@ -24,7 +24,6 @@ echo "Scaffolding Docker Files"
 
 fetch "Dockerfile"
 fetch "docker-compose.yml"
-fetch "docker-compose.staging.yml"
 fetch "docker/nginx.conf"
 fetch "docker/entrypoint.sh"
 fetch "docker/php-fpm.conf"
